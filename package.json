@@ -6,7 +6,8 @@
   "module": "./dist/esm/index.js",
   "typings": "./dist/index.d.ts",
   "files": [
-    "./dist/**/*.js"
+    "./dist/**/*.js",
+    "./dist/**/*.ts"
   ],
   "scripts": {
     "test": "jest",
