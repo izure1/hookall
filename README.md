@@ -69,7 +69,7 @@ import { useHookall } from 'hookall'
 
 ## Methods
 
-### useHookall(target: object|undefined)
+### `useHookall` (target: `object`|`undefined`)
 
 Create hook system. you can pass a target object or undefined. If you pass a object, the hook system will be work for object locally. If not specified, will be work for global.
 
