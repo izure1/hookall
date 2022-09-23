@@ -1,13 +1,12 @@
 {
   "name": "hookall",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "The hook system like a event emitter. but no require inherit.",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "typings": "./dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/index.d.ts",
   "files": [
-    "./dist/**/*.js",
-    "./dist/**/*.ts"
+    "dist/**/*"
   ],
   "scripts": {
     "test": "jest",

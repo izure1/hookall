@@ -10,7 +10,7 @@ esbuild.buildSync({
 
 esbuild.buildSync({
   entryPoints: ['./src/index.js'],
-  outfile: './dist/cjm/index.js',
+  outfile: './dist/cjs/index.js',
   bundle: true,
   format: 'cjs',
   target: 'esnext',
