@@ -11,7 +11,7 @@ class HookallStore extends WeakMap<object, HookallTargetCommand> {
   }
 }
 
-export class Hookall {
+class Hookall {
   static readonly Global = {}
   private static readonly _Store = new HookallStore()
 

@@ -1,1 +1,1 @@
-import { useHookall } from './Hookall'
+export { useHookall } from './Hookall'
