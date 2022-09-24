@@ -18,6 +18,8 @@ await hook.trigger('run', 1, 2, 3) // console: 1, 2, 3
 
 ## Why use Hookall?
 
+### `Multiple inheritance issue`
+
 The event emitter is powerful function that can be used to emit events. but sometimes you cannot inherit that.
 
 ```typescript
@@ -45,6 +47,44 @@ class MyWebComponent extends HTMLElement {
     ...
   }
 }
+```
+
+### `Strict type definition with typescript`
+
+If you want to support strict type definitions with typescript, you can use the following syntax.
+
+```typescript
+type Hook = {
+  'create':   (element: HTMLElement) => void
+  'destroy':  (timestamp: number) => void
+}
+
+const el = document.querySelector('your-selector')
+const hook = useHookall<Hook>(el)
+
+hook.on('create', (element) => {
+  console.log('element created!')
+})
+```
+
+### `Work with asynchronously`
+
+`hookall` library supports asynchronous.
+
+```typescript
+hook.on('create', async (el) => {
+  await doSomething(el)
+})
+
+hook.on('create', async (el) => {
+  await doSomethingAnother(el)
+})
+
+console.log('create!')
+
+await hook.trigger('create', element)
+
+console.log('done!')
 ```
 
 ## How to use
@@ -99,33 +139,7 @@ Remove the callback function registered with the on method. If the callback func
 
 Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously. Therefore, the `await` keyword allows you to wait until all registered callback functions are called.
 
-## Advanced Usage (Typescript)
-
-You can define strict type of callback parameters with given type.
-
-```typescript
-type Hook = {
-  'create': (element: HTMLElement) => void
-  'destroy': (timestamp: number) => void
-}
-
-class MyWebComponent extends HTMLElement {
-  readonly hook: ReturnType<typeof useHookall<Hook>>
-
-  constructor() {
-    this.hook
-    this.hook = useHookall<Hook>()
-  }
-
-  connectedCallback(): void {
-    this.hook.trigger('create', this)
-  }
-
-  disconnectedCallback(): void {
-    this.hook.trigger('destroy', Date.now())
-  }
-}
-```
+---
 
 ## License
 
