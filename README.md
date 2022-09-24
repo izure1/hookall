@@ -99,6 +99,34 @@ Remove the callback function registered with the on method. If the callback func
 
 Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously. Therefore, the `await` keyword allows you to wait until all registered callback functions are called.
 
+## Advanced Usage (Typescript)
+
+You can define strict type of callback parameters with given type.
+
+```typescript
+type Hook = {
+  'create': (element: HTMLElement) => void
+  'destroy': (timestamp: number) => void
+}
+
+class MyWebComponent extends HTMLElement {
+  readonly hook: ReturnType<useHookall<Hook>>
+
+  constructor() {
+    this.hook
+    this.hook = useHookall<Hook>()
+  }
+
+  connectedCallback(): void {
+    this.hook.trigger('create', this)
+  }
+
+  disconnectedCallback(): void {
+    this.hook.trigger('destroy', Date.now())
+  }
+}
+```
+
 ## License
 
 MIT License.

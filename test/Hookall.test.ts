@@ -6,9 +6,13 @@ function delay(duration: number): Promise<void> {
   })
 }
 
+interface Hook {
+  'test': (a: number, b: number, c: number) => void
+}
+
 test('local-hook-on', async () => {
   const obj = {}
-  const hook = useHookall(obj)
+  const hook = useHookall<Hook>(obj)
 
   hook.on('test', async (a, b, c) => {
     delay(1000)
