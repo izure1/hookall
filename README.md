@@ -110,7 +110,7 @@ type Hook = {
 }
 
 class MyWebComponent extends HTMLElement {
-  readonly hook: ReturnType<useHookall<Hook>>
+  readonly hook: ReturnType<typeof useHookall<Hook>>
 
   constructor() {
     this.hook
