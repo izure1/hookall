@@ -1,5 +1,5 @@
 type DefaultListener = {
-  [k: string]: (...args: any) => void|Promise<void>
+  [k: string]: (...args: any) => any|Promise<any>
 }
 
 type ListenerSignature<M> = {
@@ -27,8 +27,14 @@ class Hookall<M extends ListenerSignature<M>> {
 
   protected readonly _command: HookallCallbackMap<M>
 
+  /**
+   * Create hook system. you can pass a target object or undefined.
+   * If you pass a object, the hook system will be work for object locally. You're going to want this kind of usage in general.
+   * If not specified, will be work for global. This is useful when you want to share your work with multiple files.
+   * @param target The object to work with locally. If not specified, will be work for global.
+   */
   constructor(target: object) {
-    this._command = Hookall._Store.ensure(target)
+    this._command = Hookall._Store.ensure(target) as any
   }
 
   private _ensureCommand<K extends keyof M>(command: K): HookallCallback<M, K>[] {
@@ -38,12 +44,23 @@ class Hookall<M extends ListenerSignature<M>> {
     return this._command.get(command)!
   }
 
+  /**
+   * Register the callback function. Registered functions can then be called past the same command with the `trigger` method.
+   * The parameters of the callback function are those passed when calling the `trigger` method.
+   * @param command The unique key for call `off` or `trigger`.
+   * @param callback The callback function.
+   */
   on<K extends keyof M>(command: K, callback: M[K]): this {
     const callbacks = this._ensureCommand(command)
     callbacks.push(callback)
     return this
   }
 
+  /**
+   * Remove the callback function registered with the on method. If the callback function parameter is not exceeded, remove all callback functions registered with that command.
+   * @param command The unique key from `on`.
+   * @param callback The callback function. If not specified, all callback functions will be removed.
+   */
   off<K extends keyof M>(command: K, callback: M[K]|null = null): this {
     const callbacks = this._ensureCommand(command)
     if (callback !== null) {
@@ -56,6 +73,13 @@ class Hookall<M extends ListenerSignature<M>> {
     return this
   }
 
+  /**
+   * Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously.
+   * Therefore, the `await` keyword allows you to wait until all registered callback functions are called.
+   * @param command The unique key from `on`.
+   * @param args pass arguments to the callback function.
+   * @returns 
+   */
   async trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void> {
     const callbacks = this._ensureCommand(command)
     for (const callback of callbacks) {
@@ -64,6 +88,12 @@ class Hookall<M extends ListenerSignature<M>> {
   }
 }
 
-export function useHookall<L extends ListenerSignature<L> = DefaultListener>(target: object = Hookall.Global): Hookall<L> {
-  return new Hookall<L>(target)
+/**
+ * Create hook system. you can pass a target object or undefined.
+ * If you pass a object, the hook system will be work for object locally. You're going to want this kind of usage in general.
+ * If not specified, will be work for global. This is useful when you want to share your work with multiple files.
+ * @param target The object to work with locally. If not specified, will be work for global. Default is `Hookall.Global`.
+ */
+export function useHookall<M extends ListenerSignature<M> = DefaultListener>(target: object = Hookall.Global): Hookall<M> {
+  return new Hookall<M>(target)
 }
