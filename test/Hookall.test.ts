@@ -7,37 +7,29 @@ function delay(duration: number): Promise<void> {
 }
 
 interface Hook {
-  'test': (a: number, b: number, c: number) => void
+  'a': (before: number) => void
+  'b': (before: number) => void
+  'c': (before: number) => void
 }
 
 test('local-hook-on', async () => {
-  const obj = {}
-  const hook = useHookall<Hook>(obj)
-
-  hook.on('test', async (a, b, c) => {
-    delay(1000)
-    console.log(1000)
-    delay(1000)
-    console.log('done', a, b, c)
-  })
-
-  await hook.trigger('test', 1, 2, 3)
-})
-
-test('local-hook-off', async () => {
-  const obj = {}
-  const hook = useHookall(obj)
-
-  hook.on('test', async (a, b, c) => {
-    delay(1000)
-    console.log(1000)
-    delay(1000)
-    console.log('done', a, b, c)
-  })
-
-  await hook.trigger('test', 1, 2, 3)
-
-  hook.off('test')
-
-  await hook.trigger('test', 4, 5, 6)
+  const hook = useHookall<Hook>({})
+    hook
+    .on('a', async (before) => {
+      await delay(1000)
+      console.log('process', before)
+      await hook.trigger('b', Date.now())
+    })
+    .on('b', async (before) => {
+      await delay(1000)
+      console.log('process', before)
+      await hook.trigger('c', Date.now())
+    })
+    .on('c', async (before) => {
+      await delay(1000)
+      console.log('process', before)
+    })
+  
+  await hook.trigger('a', Date.now())
+  console.log('done', Date.now())
 })
