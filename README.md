@@ -18,7 +18,7 @@ await hook.trigger('run', 1, 2, 3) // console: 1, 2, 3
 
 ## Why use Hookall?
 
-### `Multiple inheritance issue`
+### Multiple inheritance issue
 
 The event emitter is powerful function that can be used to emit events. but sometimes you cannot inherit that.
 
@@ -49,7 +49,7 @@ class MyWebComponent extends HTMLElement {
 }
 ```
 
-### `Strict type definition with typescript`
+### Strict type definition with typescript
 
 If you want to support strict type definitions with typescript, you can use the following syntax.
 
@@ -67,7 +67,7 @@ hook.on('create', (element) => {
 })
 ```
 
-### `Work with asynchronously`
+### Work with asynchronously
 
 `hookall` library supports asynchronous.
 
@@ -111,36 +111,45 @@ import { useHookall } from 'hookall'
 
 ### `useHookall` (target: `object`|`undefined`)
 
-Create hook system. you can pass a target object or undefined. If you pass a object, the hook system will be work for object locally. If not specified, will be work for global.
+Create hook system. you can pass a target object or undefined. If you pass a object, the hook system will be work for object locally. You're going to want this kind of usage in general.
 
 ```typescript
 import { useHookall } from 'hookall'
 
-// file A
+const element = document.querySelector('your-selector')
+const hook = useHookall(element)
+
+hook.on('create', () => { ... })
+```
+
+If not specified, will be work for global. This is useful when you want to share your work with multiple files.
+
+```typescript
+import { useHookall } from 'hookall'
+
+// file A.ts
 const globalHook = useHookall()
 
 globalHook.on('from-B', async (now) => { ... })
 
-// file B
+// file B.ts
 const globalHook = useHookall()
 
 globalHook.trigger('from-B', Date.now())
 ```
 
-### `on` (command: `string`, callback: `Function`): `this`
+### `on` (command: `string`|`number`|`symbol`, callback: `Function`): `this`
 
 Register the callback function. Registered functions can then be called past the same command with the `trigger` method. The parameters of the callback function are those passed when calling the `trigger` method.
 
-### `off` (command: `string,` callback?: `Function`): `this`
+### `off` (command: `string`|`number`|`symbol`, callback?: `Function`): `this`
 
 Remove the callback function registered with the on method. If the callback function parameter is not exceeded, remove all callback functions registered with that command.
 
-### `trigger` (command: `string`, ...args: `any`): `Promise<void>`
+### `trigger` (command: `string`|`number`|`symbol`, ...args: `any`): `Promise<void>`
 
 Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously. Therefore, the `await` keyword allows you to wait until all registered callback functions are called.
 
----
-
 ## License
 
-MIT License.
+MIT License
