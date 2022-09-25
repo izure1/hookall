@@ -36,15 +36,18 @@ import { useHookall } from 'hookall'
 class MyWebComponent extends HTMLElement {
   constructor() {
     super()
-    this.hook = useHookall(this)
-    this.hook.on('create', async () => {
+
+    // No need to store hook instance like a this.hook = useHookall(this)
+    const hook = useHookall(this)
+    hook.on('create', async () => {
       ...
     })
   }
 
   connectedCallback(): void {
-    await this.hook.trigger('create')
-    ...
+    // You can get same hooks everywhere when given a same object.
+    const hook = useHookall(this)
+    await hook.trigger('create')
   }
 }
 ```
