@@ -44,9 +44,14 @@ var _Hookall = class {
   }
   async trigger(command, ...args) {
     const callbacks = this._ensureCommand(command);
+    let r;
     for (const callback of callbacks) {
-      await callback(...args);
+      r = await callback(...args);
+      if (r !== void 0) {
+        break;
+      }
     }
+    return r;
   }
 };
 var Hookall = _Hookall;

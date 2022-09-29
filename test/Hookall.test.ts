@@ -14,7 +14,7 @@ interface Hook {
 
 test('local-hook-on', async () => {
   const hook = useHookall<Hook>({})
-    hook
+  hook
     .on('a', async (before) => {
       await delay(1000)
       console.log('process', before)
@@ -32,4 +32,26 @@ test('local-hook-on', async () => {
   
   await hook.trigger('a', Date.now())
   console.log('done', Date.now())
+})
+
+test('local-hook-stop', async () => {
+  const hook = useHookall<Hook>({})
+
+  hook
+    .on('a', async () => {
+      await delay(1000)
+      console.log(1)
+    })
+    .on('a', async () => {
+      await delay(1000)
+      console.log(2)
+      return 2
+    })
+    .on('a', async () => {
+      await delay(1000)
+      console.log(3)
+    })
+
+  const result = await hook.trigger('a', 0)
+  expect(result).toBe(2)
 })

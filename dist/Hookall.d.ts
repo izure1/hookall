@@ -21,6 +21,7 @@ declare class Hookall<M extends ListenerSignature<M>> {
     /**
      * Register the callback function. Registered functions can then be called past the same command with the `trigger` method.
      * The parameters of the callback function are those passed when calling the `trigger` method.
+     * If callback function returns non `undefined`, subsequent callback functions are no longer called.
      * @param command The unique key for call `off` or `trigger`.
      * @param callback The callback function.
      */
@@ -34,11 +35,11 @@ declare class Hookall<M extends ListenerSignature<M>> {
     /**
      * Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously.
      * Therefore, the `await` keyword allows you to wait until all registered callback functions are called.
+     * If the callback function registered with the `on` method returns a non `undefined` value, it stops subsequent callback function calls and returns that value.
      * @param command The unique key from `on`.
      * @param args pass arguments to the callback function.
-     * @returns
      */
-    trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void>;
+    trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<any>;
 }
 /**
  * Create hook system. you can pass a target object or undefined.
