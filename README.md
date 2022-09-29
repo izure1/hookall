@@ -143,7 +143,7 @@ globalHook.trigger('from-B', Date.now())
 
 ### `on` (command: `string`|`number`|`symbol`, callback: `Function`): `this`
 
-Register the callback function. Registered functions can then be called past the same command with the `trigger` method. The parameters of the callback function are those passed when calling the `trigger` method.
+Register the callback function. Registered functions can then be called past the same command with the `trigger` method. The parameters of the callback function are those passed when calling the `trigger` method. If callback function returns non `undefined`, subsequent callback functions are no longer called.
 
 ### `off` (command: `string`|`number`|`symbol`, callback?: `Function`): `this`
 
@@ -151,7 +151,25 @@ Remove the callback function registered with the on method. If the callback func
 
 ### `trigger` (command: `string`|`number`|`symbol`, ...args: `any`): `Promise<void>`
 
-Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously. Therefore, the `await` keyword allows you to wait until all registered callback functions are called.
+Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously. Therefore, the `await` keyword allows you to wait until all registered callback functions are called. If the callback function registered with the `on` method returns a non `undefined` value, it stops subsequent callback function calls and returns that value.
+
+```typescript
+const yourCharacter = someGameObject
+const hook = useHookall(yourCharacter)
+
+class Chair {
+  constructor() {
+    hook.on('character-sit', () => {
+      if (yourCharacter.nearBy(this)) {
+        return { ok: true, target: this }
+      }
+    })
+  }
+}
+
+class ChairA extends Chair { ... }
+class ChairB extends Chair { ... }
+```
 
 ## License
 
