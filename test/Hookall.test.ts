@@ -7,9 +7,9 @@ function delay(duration: number): Promise<void> {
 }
 
 interface Hook {
-  'a': (before: number) => void
-  'b': (before: number) => void
-  'c': (before: number) => void
+  'a': (before: number) => Promise<void|number>
+  'b': (before: number) => Promise<void>
+  'c': (before: number) => Promise<void>
 }
 
 test('local-hook-on', async () => {

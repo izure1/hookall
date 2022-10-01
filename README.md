@@ -58,8 +58,8 @@ If you want to support strict type definitions with typescript, you can use the 
 
 ```typescript
 type Hook = {
-  'create':   (element: HTMLElement) => void
-  'destroy':  (timestamp: number) => void
+  'create':   (element: HTMLElement) => Promise<void>
+  'destroy':  (timestamp: number) => Promise<void>
 }
 
 const el = document.querySelector('your-selector')
@@ -173,7 +173,7 @@ Register the callback function. Registered functions can then be called past the
 
 Remove the callback function registered with the on method. If the callback function parameter is not exceeded, remove all callback functions registered with that command.
 
-### `trigger` (command: `string`|`number`|`symbol`, ...args: `any`): `Promise<void>`
+### `trigger` (command: `string`|`number`|`symbol`, ...args: `any`): `Promise<any>`
 
 Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously. Therefore, the `await` keyword allows you to wait until all registered callback functions are called. If the callback function registered with the `on` method returns a `non-undefined` value, it stops subsequent callback function calls and returns that value.
 

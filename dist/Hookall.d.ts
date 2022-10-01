@@ -1,10 +1,10 @@
 declare type DefaultListener = {
-    [k: string]: (...args: any) => any | Promise<any>;
+    [k: string]: (...args: any) => Promise<any>;
 };
 declare type ListenerSignature<M> = {
-    [K in keyof M]: (...args: any) => void | Promise<void>;
+    [K in keyof M]: (...args: any) => Promise<any>;
 };
-declare type HookallCallback<M extends ListenerSignature<M>, K extends keyof M> = (...args: Parameters<M[K]>) => void | Promise<void>;
+declare type HookallCallback<M extends ListenerSignature<M>, K extends keyof M> = (...args: Parameters<M[K]>) => Promise<void | ReturnType<M[K]>>;
 declare type HookallCallbackMap<M extends ListenerSignature<M>> = Map<string | number | symbol, HookallCallback<M, keyof M>[]>;
 declare class Hookall<M extends ListenerSignature<M>> {
     static readonly Global: {};
@@ -39,7 +39,7 @@ declare class Hookall<M extends ListenerSignature<M>> {
      * @param command The unique key from `on`.
      * @param args pass arguments to the callback function.
      */
-    trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<any>;
+    trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void | ReturnType<M[K]>>;
 }
 /**
  * Create hook system. you can pass a target object or undefined.

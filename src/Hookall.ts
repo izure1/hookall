@@ -1,12 +1,12 @@
 type DefaultListener = {
-  [k: string]: (...args: any) => any|Promise<any>
+  [k: string]: (...args: any) => Promise<any>
 }
 
 type ListenerSignature<M> = {
-  [K in keyof M]: (...args: any) => void|Promise<void>
+  [K in keyof M]: (...args: any) => Promise<any>
 }
 
-type HookallCallback<M extends ListenerSignature<M>, K extends keyof M> = (...args: Parameters<M[K]>) => void|Promise<void>
+type HookallCallback<M extends ListenerSignature<M>, K extends keyof M> = (...args: Parameters<M[K]>) => Promise<void|ReturnType<M[K]>>
 
 type HookallCallbackMap<M extends ListenerSignature<M>> = Map<string|number|symbol, HookallCallback<M, keyof M>[]>
 
@@ -81,7 +81,7 @@ class Hookall<M extends ListenerSignature<M>> {
    * @param command The unique key from `on`.
    * @param args pass arguments to the callback function.
    */
-  async trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<any> {
+  async trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void|ReturnType<M[K]>> {
     const callbacks = this._ensureCommand(command)
     let r: any
     for (const callback of callbacks) {
