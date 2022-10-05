@@ -57,6 +57,8 @@ class MyWebComponent extends HTMLElement {
 If you want to support strict type definitions with typescript, you can use the following syntax.
 
 ```typescript
+import { useHookall, IHookall } from 'hookall'
+
 type Hook = {
   'create':   (element: HTMLElement) => Promise<void>
   'destroy':  (timestamp: number) => Promise<void>
@@ -65,12 +67,17 @@ type Hook = {
 const el = document.querySelector('your-selector')
 const hook = useHookall<Hook>(el)
 
-hook.on('create', (element) => {
+hook.on('create', async (element) => {
   console.log('element created!')
 })
+
+// return type (IHookall)
+function getElementHook(): IHookall<Hook> {
+  return useHookall<Hook>(el)
+}
 ```
 
-### Work with asynchronously
+### Work asynchronously
 
 `hookall` library supports asynchronous.
 
@@ -146,7 +153,7 @@ import { useHookall } from 'hookall'
 const element = document.querySelector('your-selector')
 const hook = useHookall(element)
 
-hook.on('create', () => { ... })
+hook.on('create', async () => { ... })
 ```
 
 If not specified, will be work for global. This is useful when you want to share your work with multiple files.
@@ -162,7 +169,7 @@ globalHook.on('from-B', async (now) => { ... })
 // file B.ts
 const globalHook = useHookall()
 
-globalHook.trigger('from-B', Date.now())
+await globalHook.trigger('from-B', Date.now())
 ```
 
 ### `on` (command: `string`|`number`|`symbol`, callback: `Function`): `this`
@@ -178,21 +185,18 @@ Remove the callback function registered with the on method. If the callback func
 Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously. Therefore, the `await` keyword allows you to wait until all registered callback functions are called. If the callback function registered with the `on` method returns a `non-undefined` value, it stops subsequent callback function calls and returns that value.
 
 ```typescript
-const yourCharacter = someGameObject
-const hook = useHookall(yourCharacter)
+const actor = someGameObject
 
 class Chair {
   constructor() {
+    const hook = useHookall(actor)
     hook.on('character-sit', () => {
-      if (yourCharacter.nearBy(this)) {
+      if (actor.nearBy(this)) {
         return { ok: true, target: this }
       }
     })
   }
 }
-
-class ChairA extends Chair { ... }
-class ChairB extends Chair { ... }
 ```
 
 ## License
