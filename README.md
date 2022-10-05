@@ -114,7 +114,7 @@ hook.on('test', async () => {
   console.log('This message is not showing up in the console.')
 })
 
-const err = await hook.trigger('a', 11)
+const err = await hook.trigger('test', 11)
 if (err) {
   throw err
 }
