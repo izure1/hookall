@@ -137,7 +137,7 @@ import { useHookall } from 'hookall'
 
 ```html
 <script type="module">
-  import { useHookall } from 'https://cdn.jsdelivr.net/npm/hookall@1.x.x/dist/esm/index.js'
+  import { useHookall } from 'https://cdn.jsdelivr.net/npm/hookall@1.x.x/dist/esm/index.min.js'
 </script>
 ```
 
@@ -145,7 +145,7 @@ import { useHookall } from 'hookall'
 
 ### `useHookall` (target: `object`|`undefined`)
 
-Create hook system. you can pass a target object or undefined. If you pass a object, the hook system will be work for object locally. You're going to want this kind of usage in general.
+Create hook system. you can pass a target `object` or `undefined`. If you pass a `object`, the hook system will be work for object locally. You're going to want this kind of usage in general.
 
 ```typescript
 import { useHookall } from 'hookall'
