@@ -1,5 +1,5 @@
 type DefaultListener = {
-  [k: string]: (...args: any) => Promise<any>
+  [k: string|number|symbol]: (...args: any) => Promise<any>
 }
 
 type ListenerSignature<M> = {
@@ -21,11 +21,17 @@ class HookallStore<M extends ListenerSignature<M>> extends WeakMap<object, Hooka
   }
 }
 
-class Hookall<M extends ListenerSignature<M>> {
-  static readonly Global = {}
-  private static readonly _Store = new HookallStore()
+export interface IHookall<M extends ListenerSignature<M> = DefaultListener> {
+  on<K extends keyof M>(command: K, callback: M[K]): this
+  off<K extends keyof M>(command: K, callback: M[K]|null): this
+  trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void|ReturnType<M[K]>>
+}
 
-  protected readonly _command: HookallCallbackMap<M>
+class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
+  static readonly Global = {}
+  private static readonly __Store = new HookallStore()
+
+  protected readonly __hookCommands: HookallCallbackMap<M>
 
   /**
    * Create hook system. you can pass a target object or undefined.
@@ -34,14 +40,14 @@ class Hookall<M extends ListenerSignature<M>> {
    * @param target The object to work with locally. If not specified, will be work for global.
    */
   constructor(target: object) {
-    this._command = Hookall._Store.ensure(target) as any
+    this.__hookCommands = Hookall.__Store.ensure(target) as any
   }
 
   private _ensureCommand<K extends keyof M>(command: K): HookallCallback<M, K>[] {
-    if (!this._command.has(command)) {
-      this._command.set(command, [])
+    if (!this.__hookCommands.has(command)) {
+      this.__hookCommands.set(command, [])
     }
-    return this._command.get(command)!
+    return this.__hookCommands.get(command)!
   }
 
   /**
