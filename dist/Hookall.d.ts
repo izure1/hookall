@@ -1,15 +1,20 @@
 declare type DefaultListener = {
-    [k: string]: (...args: any) => Promise<any>;
+    [k: string | number | symbol]: (...args: any) => Promise<any>;
 };
 declare type ListenerSignature<M> = {
     [K in keyof M]: (...args: any) => Promise<any>;
 };
 declare type HookallCallback<M extends ListenerSignature<M>, K extends keyof M> = (...args: Parameters<M[K]>) => Promise<void | ReturnType<M[K]>>;
 declare type HookallCallbackMap<M extends ListenerSignature<M>> = Map<string | number | symbol, HookallCallback<M, keyof M>[]>;
-declare class Hookall<M extends ListenerSignature<M>> {
+export interface IHookall<M extends ListenerSignature<M> = DefaultListener> {
+    on<K extends keyof M>(command: K, callback: M[K]): this;
+    off<K extends keyof M>(command: K, callback: M[K] | null): this;
+    trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void | ReturnType<M[K]>>;
+}
+declare class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
     static readonly Global: {};
-    private static readonly _Store;
-    protected readonly _command: HookallCallbackMap<M>;
+    private static readonly __Store;
+    protected readonly __hookCommands: HookallCallbackMap<M>;
     /**
      * Create hook system. you can pass a target object or undefined.
      * If you pass a object, the hook system will be work for object locally. You're going to want this kind of usage in general.

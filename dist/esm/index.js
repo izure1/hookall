@@ -16,15 +16,15 @@ var HookallStore = class extends WeakMap {
   }
 };
 var _Hookall = class {
-  _command;
+  __hookCommands;
   constructor(target) {
-    this._command = _Hookall._Store.ensure(target);
+    this.__hookCommands = _Hookall.__Store.ensure(target);
   }
   _ensureCommand(command) {
-    if (!this._command.has(command)) {
-      this._command.set(command, []);
+    if (!this.__hookCommands.has(command)) {
+      this.__hookCommands.set(command, []);
     }
-    return this._command.get(command);
+    return this.__hookCommands.get(command);
   }
   on(command, callback) {
     const callbacks = this._ensureCommand(command);
@@ -56,7 +56,7 @@ var _Hookall = class {
 };
 var Hookall = _Hookall;
 __publicField(Hookall, "Global", {});
-__publicField(Hookall, "_Store", new HookallStore());
+__publicField(Hookall, "__Store", new HookallStore());
 function useHookall(target = Hookall.Global) {
   return new Hookall(target);
 }

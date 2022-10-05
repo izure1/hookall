@@ -1,1 +1,1 @@
-export { useHookall } from './Hookall';
+export { useHookall, IHookall } from './Hookall';
