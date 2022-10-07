@@ -31,7 +31,7 @@ var _Hookall = class {
     callbacks.push(callback);
     return this;
   }
-  off(command, callback = null) {
+  off(command, callback) {
     const callbacks = this._ensureCommand(command);
     if (callback) {
       const i = callbacks.indexOf(callback);

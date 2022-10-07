@@ -23,7 +23,7 @@ class HookallStore<M extends ListenerSignature<M>> extends WeakMap<object, Hooka
 
 export interface IHookall<M extends ListenerSignature<M> = DefaultListener> {
   on<K extends keyof M>(command: K, callback: M[K]): this
-  off<K extends keyof M>(command: K, callback: M[K]|undefined|null): this
+  off<K extends keyof M>(command: K, callback?: M[K]): this
   trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void|ReturnType<M[K]>>
 }
 
@@ -68,7 +68,7 @@ class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
    * @param command The unique key from `on`.
    * @param callback The callback function. If not specified, all callback functions will be removed.
    */
-  off<K extends keyof M>(command: K, callback: M[K]|undefined|null = null): this {
+  off<K extends keyof M>(command: K, callback?: M[K]): this {
     const callbacks = this._ensureCommand(command)
     if (callback) {
       const i = callbacks.indexOf(callback)
