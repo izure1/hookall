@@ -8,7 +8,7 @@ declare type HookallCallback<M extends ListenerSignature<M>, K extends keyof M> 
 declare type HookallCallbackMap<M extends ListenerSignature<M>> = Map<string | number | symbol, HookallCallback<M, keyof M>[]>;
 export interface IHookall<M extends ListenerSignature<M> = DefaultListener> {
     on<K extends keyof M>(command: K, callback: M[K]): this;
-    off<K extends keyof M>(command: K, callback: M[K] | null): this;
+    off<K extends keyof M>(command: K, callback: M[K] | undefined | null): this;
     trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void | ReturnType<M[K]>>;
 }
 declare class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
@@ -36,7 +36,7 @@ declare class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
      * @param command The unique key from `on`.
      * @param callback The callback function. If not specified, all callback functions will be removed.
      */
-    off<K extends keyof M>(command: K, callback?: M[K] | null): this;
+    off<K extends keyof M>(command: K, callback?: M[K] | undefined | null): this;
     /**
      * Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously.
      * Therefore, the `await` keyword allows you to wait until all registered callback functions are called.

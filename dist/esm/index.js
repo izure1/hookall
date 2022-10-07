@@ -33,7 +33,7 @@ var _Hookall = class {
   }
   off(command, callback = null) {
     const callbacks = this._ensureCommand(command);
-    if (callback !== null) {
+    if (callback) {
       const i = callbacks.indexOf(callback);
       if (i !== -1) {
         callbacks.splice(i, 1);
