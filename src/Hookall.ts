@@ -8,7 +8,13 @@ type ListenerSignature<M> = {
 
 type HookallCallback<M extends ListenerSignature<M>, K extends keyof M> = (...args: Parameters<M[K]>) => Promise<void|ReturnType<M[K]>>
 
-type HookallCallbackMap<M extends ListenerSignature<M>> = Map<string|number|symbol, HookallCallback<M, keyof M>[]>
+type HookallCallbackWrapper<M extends ListenerSignature<M>> = {
+  callback: HookallCallback<M, keyof M>
+  command: keyof M
+  repeat: number
+}
+
+type HookallCallbackMap<M extends ListenerSignature<M>> = Map<string|number|symbol, HookallCallbackWrapper<M>[]>
 
 
 class HookallStore<M extends ListenerSignature<M>> extends WeakMap<object, HookallCallbackMap<M>> {
@@ -43,11 +49,19 @@ class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
     this.__hookCommands = Hookall.__Store.ensure(target) as any
   }
 
-  private _ensureCommand<K extends keyof M>(command: K): HookallCallback<M, K>[] {
+  private _ensureCommand<K extends keyof M>(command: K): HookallCallbackWrapper<M>[] {
     if (!this.__hookCommands.has(command)) {
       this.__hookCommands.set(command, [])
     }
     return this.__hookCommands.get(command)!
+  }
+
+  private _createWrapper(command: keyof M, callback: HookallCallback<M, keyof M>, repeat: number): HookallCallbackWrapper<M> {
+    return {
+      callback,
+      command,
+      repeat
+    }
   }
 
   /**
@@ -58,8 +72,16 @@ class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
    * @param callback The callback function.
    */
   on<K extends keyof M>(command: K, callback: M[K]): this {
-    const callbacks = this._ensureCommand(command)
-    callbacks.push(callback)
+    const wrappers = this._ensureCommand(command)
+    const wrapper = this._createWrapper(command, callback, -1)
+    wrappers.push(wrapper)
+    return this
+  }
+
+  once<K extends keyof M>(command: K, callback: M[K]): this {
+    const wrappers = this._ensureCommand(command)
+    const wrapper = this._createWrapper(command, callback, 1)
+    wrappers.push(wrapper)
     return this
   }
 
@@ -69,14 +91,14 @@ class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
    * @param callback The callback function. If not specified, all callback functions will be removed.
    */
   off<K extends keyof M>(command: K, callback?: M[K]): this {
-    const callbacks = this._ensureCommand(command)
+    const wrappers = this._ensureCommand(command)
     if (callback) {
-      const i = callbacks.indexOf(callback)
+      const i = wrappers.findIndex((wrapper) => wrapper.callback === callback)
       if (i !== -1) {
-        callbacks.splice(i, 1)
+        wrappers.splice(i, 1)
       }
     }
-    callbacks.length = 0
+    wrappers.length = 0
     return this
   }
 
@@ -88,10 +110,14 @@ class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
    * @param args pass arguments to the callback function.
    */
   async trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void|ReturnType<M[K]>> {
-    const callbacks = this._ensureCommand(command)
+    const wrappers = this._ensureCommand(command)
     let r: any
-    for (const callback of callbacks) {
-      r = await callback(...args)
+    for (const wrapper of wrappers) {
+      r = await wrapper.callback(...args)
+      wrapper.repeat -= 1
+      if (wrapper.repeat === 0) {
+        this.off(command, wrapper.callback as M[K])
+      }
       if (r !== undefined) {
         break
       }
