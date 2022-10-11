@@ -26,27 +26,46 @@ var _Hookall = class {
     }
     return this.__hookCommands.get(command);
   }
+  _createWrapper(command, callback, repeat) {
+    return {
+      callback,
+      command,
+      repeat
+    };
+  }
   on(command, callback) {
-    const callbacks = this._ensureCommand(command);
-    callbacks.push(callback);
+    const wrappers = this._ensureCommand(command);
+    const wrapper = this._createWrapper(command, callback, -1);
+    wrappers.push(wrapper);
+    return this;
+  }
+  once(command, callback) {
+    const wrappers = this._ensureCommand(command);
+    const wrapper = this._createWrapper(command, callback, 1);
+    wrappers.push(wrapper);
     return this;
   }
   off(command, callback) {
-    const callbacks = this._ensureCommand(command);
+    const wrappers = this._ensureCommand(command);
     if (callback) {
-      const i = callbacks.indexOf(callback);
+      const i = wrappers.findIndex((wrapper) => wrapper.callback === callback);
       if (i !== -1) {
-        callbacks.splice(i, 1);
+        wrappers.splice(i, 1);
       }
+    } else {
+      wrappers.length = 0;
     }
-    callbacks.length = 0;
     return this;
   }
   async trigger(command, ...args) {
-    const callbacks = this._ensureCommand(command);
+    const wrappers = this._ensureCommand(command);
     let r;
-    for (const callback of callbacks) {
-      r = await callback(...args);
+    for (const wrapper of wrappers) {
+      r = await wrapper.callback(...args);
+      wrapper.repeat -= 1;
+      if (wrapper.repeat === 0) {
+        this.off(command, wrapper.callback);
+      }
       if (r !== void 0) {
         break;
       }

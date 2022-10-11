@@ -55,3 +55,25 @@ test('local-hook-stop', async () => {
   const result = await hook.trigger('a', 0)
   expect(result).toBe(2)
 })
+
+test('local-hook-once', async () => {
+  const hook = useHookall<Hook>({})
+
+  hook
+    .once('a', async () => {
+      console.log('once', 1)
+      return 1
+    })
+    .on('a', async () => {
+      console.log('on', 2)
+      return 2
+    })
+
+  const a = await hook.trigger('a', 0)
+  const b = await hook.trigger('a', 0)
+  const c = await hook.trigger('a', 0)
+
+  expect(a).toBe(1)
+  expect(b).toBe(2)
+  expect(c).toBe(2)
+})
