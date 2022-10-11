@@ -67,7 +67,7 @@ class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
   /**
    * Register the callback function. Registered functions can then be called past the same command with the `trigger` method.
    * The parameters of the callback function are those passed when calling the `trigger` method.
-   * If callback function returns non `undefined`, subsequent callback functions are no longer called.
+   * If callback function returns `non-undefined`, after callback functions are no longer called.
    * @param command The unique key for call `off` or `trigger`.
    * @param callback The callback function.
    */
@@ -78,6 +78,13 @@ class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
     return this
   }
 
+  /**
+   * Similar to the `on` method, but once called, it is no longer called. The parameters of the callback function are those passed when calling the `trigger` method.
+   * If callback function returns `non-undefined`, after callback functions are no longer called.
+   * If the current callback is not called by returning a `non-undefined` value from the previous callback, this callback is not deleted.
+   * @param command The unique key for call `off` or `trigger`.
+   * @param callback The callback function.
+   */
   once<K extends keyof M>(command: K, callback: M[K]): this {
     const wrappers = this._ensureCommand(command)
     const wrapper = this._createWrapper(command, callback, 1)
@@ -107,7 +114,7 @@ class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
   /**
    * Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously.
    * Therefore, the `await` keyword allows you to wait until all registered callback functions are called.
-   * If the callback function registered with the `on` method returns a non `undefined` value, it stops subsequent callback function calls and returns that value.
+   * If the callback function registered with the `on` method returns a non `undefined` value, it stops after callback function calls and returns that value.
    * @param command The unique key from `on`.
    * @param args pass arguments to the callback function.
    */

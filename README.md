@@ -176,6 +176,10 @@ await globalHook.trigger('from-B', Date.now())
 
 Register the callback function. Registered functions can then be called past the same command with the `trigger` method. The parameters of the callback function are those passed when calling the `trigger` method. If callback function returns `non-undefined`, subsequent callback functions are no longer called.
 
+### `once` (command: `string`|`number`|`symbol`, callback: `Function`): `this`
+
+Similar to the `on` method, but once called, it is no longer called. The parameters of the callback function are those passed when calling the `trigger` method. If callback function returns `non-undefined`, subsequent callback functions are no longer called. If the current callback is not called by returning a `non-undefined` value from the previous callback, this callback is not deleted.
+
 ### `off` (command: `string`|`number`|`symbol`, callback?: `Function`): `this`
 
 Remove the callback function registered with the on method. If the callback function parameter is not exceeded, remove all callback functions registered with that command.
