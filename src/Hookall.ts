@@ -98,7 +98,9 @@ class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {
         wrappers.splice(i, 1)
       }
     }
-    wrappers.length = 0
+    else {
+      wrappers.length = 0
+    }
     return this
   }
 
