@@ -13,6 +13,7 @@ declare type HookallCallbackWrapper<M extends ListenerSignature<M>> = {
 declare type HookallCallbackMap<M extends ListenerSignature<M>> = Map<string | number | symbol, HookallCallbackWrapper<M>[]>;
 export interface IHookall<M extends ListenerSignature<M> = DefaultListener> {
     on<K extends keyof M>(command: K, callback: M[K]): this;
+    once<K extends keyof M>(command: K, callback: M[K]): this;
     off<K extends keyof M>(command: K, callback?: M[K]): this;
     trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void | ReturnType<M[K]>>;
 }

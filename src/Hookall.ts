@@ -29,6 +29,7 @@ class HookallStore<M extends ListenerSignature<M>> extends WeakMap<object, Hooka
 
 export interface IHookall<M extends ListenerSignature<M> = DefaultListener> {
   on<K extends keyof M>(command: K, callback: M[K]): this
+  once<K extends keyof M>(command: K, callback: M[K]): this
   off<K extends keyof M>(command: K, callback?: M[K]): this
   trigger<K extends keyof M>(command: K, ...args: Parameters<M[K]>): Promise<void|ReturnType<M[K]>>
 }
