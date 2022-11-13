@@ -58,13 +58,17 @@ var _Hookall = class {
     return this;
   }
   async trigger(command, ...args) {
-    const wrappers = this._ensureCommand(command);
     let r;
+    const wrappers = [
+      ...this._ensureCommand(`before:${command}`),
+      ...this._ensureCommand(`${command}`),
+      ...this._ensureCommand(`after:${command}`)
+    ];
     for (const wrapper of wrappers) {
       r = await wrapper.callback(...args);
       wrapper.repeat -= 1;
       if (wrapper.repeat === 0) {
-        this.off(command, wrapper.callback);
+        this.off(`${command}`, wrapper.callback);
       }
       if (r !== void 0) {
         break;

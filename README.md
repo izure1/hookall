@@ -9,11 +9,15 @@ import { useHookall } from 'hookall'
 
 const hook = useHookall(yourObject)
 
-hook.on('run', async (a, b, c) => {
-  console.log(a, b, c)
+hook.on('before:run', async (arr) => {
+  arr.push(4)
 })
 
-await hook.trigger('run', 1, 2, 3) // console: 1, 2, 3
+hook.on('run', async (arr) => {
+  console.log(arr)
+})
+
+await hook.trigger('run', [1, 2, 3]) // console: 1, 2, 3, 4
 ```
 
 ## Why use Hookall?
@@ -120,6 +124,32 @@ if (err) {
 }
 ```
 
+### Data hooking using a life cycle
+
+Use `Before:` and `After:` The prefixes to manage the life cycle easily. It is easier to use with stop event propagation.
+
+```typescript
+const hook = useHookall(someObject)
+
+hook.on('before:create', async (data) => {
+  if (!data) {
+    return new Error('There is no initialization data.')
+  }
+})
+
+hook.on('create', async (data) => {
+  // ...
+})
+
+hook.on('after:create', async (data) => {
+  console.log('Successfully all work has been completed.')
+})
+
+const err = await hook.trigger('create', initialData)
+if (err) {
+  throw err
+}
+```
 
 ## How to use
 
@@ -176,13 +206,19 @@ await globalHook.trigger('from-B', Date.now())
 
 Register the callback function. Registered functions can then be called past the same command with the `trigger` method. The parameters of the callback function are those passed when calling the `trigger` method. If callback function returns `non-undefined`, subsequent callback functions are no longer called.
 
+You can manage the life cycle using `before:`, `after:`. If the command is `a`, you can use `before:a` or `after:a`. The life cycle is called in the order of `before:a` → `a` → `after:a`, and if the `non-undefined` value is returned in life cycle, the next life cycle is not called.
+
 ### `once` (command: `string`|`number`|`symbol`, callback: `Function`): `this`
 
 Similar to the `on` method, but once called, it is no longer called. The parameters of the callback function are those passed when calling the `trigger` method. If callback function returns `non-undefined`, subsequent callback functions are no longer called. If the current callback is not called by returning a `non-undefined` value from the previous callback, this callback is not deleted.
 
+You can manage the life cycle using `before:`, `after:`. If the command is `a`, you can use `before:a` or `after:a`. The life cycle is called in the order of `before:a` → `a` → `after:a`, and if the `non-undefined` value is returned in life cycle, the next life cycle is not called.
+
 ### `off` (command: `string`|`number`|`symbol`, callback?: `Function`): `this`
 
 Remove the callback function registered with the on method. If the callback function parameter is not exceeded, remove all callback functions registered with that command.
+
+You can manage the life cycle using `before:`, `after:`. If the command is `a`, you can use `before:a` or `after:a`. The life cycle is called in the order of `before:a` → `a` → `after:a`, and if the `non-undefined` value is returned in life cycle, the next life cycle is not called.
 
 ### `trigger` (command: `string`|`number`|`symbol`, ...args: `any`): `Promise<any>`
 
