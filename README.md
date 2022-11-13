@@ -202,25 +202,25 @@ const globalHook = useHookall()
 await globalHook.trigger('from-B', Date.now())
 ```
 
-### `on` (command: `string`|`number`|`symbol`, callback: `Function`): `this`
+### `on` (command: `string`, callback: `Function`): `this`
 
 Register the callback function. Registered functions can then be called past the same command with the `trigger` method. The parameters of the callback function are those passed when calling the `trigger` method. If callback function returns `non-undefined`, subsequent callback functions are no longer called.
 
 You can manage the life cycle using `before:`, `after:`. If the command is `a`, you can use `before:a` or `after:a`. The life cycle is called in the order of `before:a` → `a` → `after:a`, and if the `non-undefined` value is returned in life cycle, the next life cycle is not called.
 
-### `once` (command: `string`|`number`|`symbol`, callback: `Function`): `this`
+### `once` (command: `string`, callback: `Function`): `this`
 
 Similar to the `on` method, but once called, it is no longer called. The parameters of the callback function are those passed when calling the `trigger` method. If callback function returns `non-undefined`, subsequent callback functions are no longer called. If the current callback is not called by returning a `non-undefined` value from the previous callback, this callback is not deleted.
 
 You can manage the life cycle using `before:`, `after:`. If the command is `a`, you can use `before:a` or `after:a`. The life cycle is called in the order of `before:a` → `a` → `after:a`, and if the `non-undefined` value is returned in life cycle, the next life cycle is not called.
 
-### `off` (command: `string`|`number`|`symbol`, callback?: `Function`): `this`
+### `off` (command: `string`, callback?: `Function`): `this`
 
 Remove the callback function registered with the on method. If the callback function parameter is not exceeded, remove all callback functions registered with that command.
 
 You can manage the life cycle using `before:`, `after:`. If the command is `a`, you can use `before:a` or `after:a`. The life cycle is called in the order of `before:a` → `a` → `after:a`, and if the `non-undefined` value is returned in life cycle, the next life cycle is not called.
 
-### `trigger` (command: `string`|`number`|`symbol`, ...args: `any`): `Promise<any>`
+### `trigger` (command: `string`, ...args: `any`): `Promise<any>`
 
 Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously. Therefore, the `await` keyword allows you to wait until all registered callback functions are called. If the callback function registered with the `on` method returns a `non-undefined` value, it stops subsequent callback function calls and returns that value.
 
