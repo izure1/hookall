@@ -138,7 +138,7 @@ import { useHookall } from 'hookall'
 
 ```html
 <script type="module">
-  import { useHookall } from 'https://cdn.jsdelivr.net/npm/hookall@1.x.x/dist/esm/index.min.js'
+  import { useHookall } from 'https://cdn.jsdelivr.net/npm/hookall@2.x.x/dist/esm/index.min.js'
 </script>
 ```
 
