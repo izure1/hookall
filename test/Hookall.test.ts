@@ -1,4 +1,4 @@
-import { useHookall } from '../src/Hookall'
+import { useHookall, IHookall } from '../src/Hookall'
 
 interface Hook {
   'lifecycle1': (n: number) => Promise<number>
@@ -7,7 +7,7 @@ interface Hook {
 }
 
 test('hook-lifecycle', async () => {
-  const hook = useHookall<Hook>({})
+  const hook: IHookall<Hook> = useHookall<Hook>({})
 
   hook.onBefore('lifecycle1', async (n) => {
     return n*n
