@@ -1,95 +1,68 @@
 import { useHookall } from '../src/Hookall'
 
-function delay(duration: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, duration)
-  })
-}
-
 interface Hook {
-  'a': (before: { value: number }) => Promise<void|number>
-  'b': (before: { value: number }) => Promise<void>
-  'c': (before: { value: number }) => Promise<void>
+  'lifecycle1': (n: number) => Promise<number>
+  'lifecycle2': (n: number) => Promise<number>
+  'local-hook-once': (n: number) => Promise<number>
 }
 
 test('hook-lifecycle', async () => {
   const hook = useHookall<Hook>({})
 
-  hook
-  .on('before:a', async (data) => {
-    data.value = 1
-    return data.value
-  })
-  .on('a', async (data) => {
-    return data.value
+  hook.onBefore('lifecycle1', async (n) => {
+    return n*n
+  }).onBefore('lifecycle1', async (n) => {
+    return n+n
   })
 
-  const t = await hook.trigger('a', { value: 0 })
-  expect(t).toBe(1)
-})
+  hook.onBefore('lifecycle2', async (n) => {
+    return n*n
+  }).onBefore('lifecycle2', async (n) => {
+    return n+n
+  }).onAfter('lifecycle2', async (n) => {
+    return Math.log(n)
+  })
 
-test('local-hook-on', async () => {
-  const hook = useHookall<Hook>({})
-  hook
-    .on('a', async (before) => {
-      await delay(1000)
-      console.log('process', before)
-      await hook.trigger('b', { value: Date.now() })
-    })
-    .on('b', async (before) => {
-      await delay(1000)
-      console.log('process', before)
-      await hook.trigger('c', { value: Date.now() })
-    })
-    .on('c', async (before) => {
-      await delay(1000)
-      console.log('process', before)
-    })
-  
-  await hook.trigger('a', { value: Date.now() })
-  console.log('done', Date.now())
-})
+  const r1 = await hook.trigger('lifecycle1', 2, async (v) => {
+    return v
+  })
 
-test('local-hook-stop', async () => {
-  const hook = useHookall<Hook>({})
+  const r2 = await hook.trigger('lifecycle2', 2, async (v) => {
+    return v
+  })
 
-  hook
-    .on('a', async () => {
-      await delay(1000)
-      console.log(1)
-    })
-    .on('a', async () => {
-      await delay(1000)
-      console.log(2)
-      return 2
-    })
-    .on('a', async () => {
-      await delay(1000)
-      console.log(3)
-    })
-
-  const result = await hook.trigger('a', { value: 0 })
-  expect(result).toBe(2)
+  expect(r1).toBe(8)
+  expect(r2).toBe(Math.log(8))
 })
 
 test('local-hook-once', async () => {
   const hook = useHookall<Hook>({})
 
   hook
-    .once('a', async () => {
-      console.log('once', 1)
-      return 1
+    .onceBefore('local-hook-once', async (n) => {
+      return n*n
     })
-    .on('a', async () => {
-      console.log('on', 2)
-      return 2
+    .onBefore('local-hook-once', async (n) => {
+      return n*n
+    })
+    .onceAfter('local-hook-once', async (n) => {
+      return n+1
+    })
+    .onAfter('local-hook-once', async (n) => {
+      return n+2
     })
 
-  const a = await hook.trigger('a', { value: 0 })
-  const b = await hook.trigger('a', { value: 0 })
-  const c = await hook.trigger('a', { value: 0 })
+  const res1 = await hook.trigger('local-hook-once', 2, async (n) => {
+    return n
+  })
+  const res2 = await hook.trigger('local-hook-once', 2, async (n) => {
+    return n
+  })
+  const res3 = await hook.trigger('local-hook-once', 3, async (n) => {
+    return n
+  })
 
-  expect(a).toBe(1)
-  expect(b).toBe(2)
-  expect(c).toBe(2)
+  expect(res1).toBe(19)
+  expect(res2).toBe(6)
+  expect(res3).toBe(11)
 })

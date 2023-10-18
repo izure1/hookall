@@ -2,83 +2,79 @@
 
 [![](https://data.jsdelivr.com/v1/package/npm/hookall/badge)](https://www.jsdelivr.com/package/npm/hookall)
 
-The hook system like a event emitter. but no require inherit.
+Enhance your program's strength and flexibility by seamlessly hooking into the operation.
 
 ```typescript
 import { useHookall } from 'hookall'
 
 const hook = useHookall(yourObject)
 
-hook.on('before:run', async (arr) => {
+hook.onBefore('run', async (arr) => {
+  arr.push(2)
+  return arr
+})
+
+hook.onAfter('run', async (arr) => {
   arr.push(4)
+  return arr
 })
 
-hook.on('run', async (arr) => {
-  console.log(arr)
-})
-
-await hook.trigger('run', [1, 2, 3]) // console: 1, 2, 3, 4
+const initial = [1]
+const arr = await hook.trigger('run', initial, (arr) => {
+  arr.push(3)
+  return arr
+}) // console: [1, 2, 3, 4]
 ```
+
+**Attention!**  
+`Ver.2` has many differences compared to `Ver.1`, especially in the preprocessing and post-processing steps. Please refer to the documentation.
 
 ## Why use Hookall?
-
-### Multiple inheritance issue
-
-The event emitter is powerful function that can be used to emit events. but sometimes you cannot inherit that.
-
-```typescript
-class MyWebComponent extends HTMLElement {
-  // You can't inherit event emitter if need to inherit another class.
-}
-```
-
-The hookall system will be useful for like this situation.
-
-```typescript
-import { useHookall } from 'hookall'
-
-class MyWebComponent extends HTMLElement {
-  constructor() {
-    super()
-
-    // No need to store hook instance like a this.hook = useHookall(this)
-    const hook = useHookall(this)
-    hook.on('create', async () => {
-      ...
-    })
-  }
-
-  connectedCallback(): void {
-    // You can get same hooks everywhere when given a same object.
-    const hook = useHookall(this)
-    await hook.trigger('create')
-  }
-}
-```
 
 ### Strict type definition with typescript
 
 If you want to support strict type definitions with typescript, you can use the following syntax.
 
 ```typescript
+import { writeFile } from 'fs/promises'
 import { useHookall, IHookall } from 'hookall'
 
-type Hook = {
-  'create':   (element: HTMLElement) => Promise<void>
-  'destroy':  (timestamp: number) => Promise<void>
+class FileBuilder {
+  private _name: string
+
+  constructor() {
+    this._name = ''
+  }
+
+  setName(name: string): void {
+    this._name = name
+    return this
+  }
+
+  async make(): Promise<string> {
+    const filePath = this._dir+this._name
+    const hook = useHookall<Hook>(this)
+
+    return await hook.trigger('make', filePath, async (filePath) => {
+      return await writeFile(filePath)
+    })
+  }
 }
 
-const el = document.querySelector('your-selector')
-const hook = useHookall<Hook>(el)
 
-hook.on('create', async (element) => {
-  console.log('element created!')
+const builder = new FileBuilder()
+const backupHook = useHookall<Hook>(builder)
+
+hook.onBefore('make', async (filePath) => {
+  return filePath.replace('.txt', '.json')
+})
+hook.onAfter('make', async (filePath) => {
+  console.log('file created!')
+  return filePath
 })
 
-// return type (IHookall)
-function getElementHook(): IHookall<Hook> {
-  return useHookall<Hook>(el)
-}
+const filePath = await builder.setName('my-file.txt').make()
+console.log(filePath) // my-file.json
 ```
 
 ### Work asynchronously
@@ -88,67 +84,42 @@ function getElementHook(): IHookall<Hook> {
 ```typescript
 hook.on('create', async (el) => {
   await doSomething(el)
+  return el
 })
 
 hook.on('create', async (el) => {
   await doSomethingAnother(el)
+  return el
 })
 
 console.log('create!')
-
 await hook.trigger('create', element)
-
 console.log('done!')
-```
-
-### Stop event propagation
-
-If you want, stop the event propagation. Just return `non-undefined` value.
-
-```typescript
-const hook = useHookall(someObject)
-
-hook.on('test', async (num) => {
-  if (num > 10) {
-    return new Error('The parameter received is a number greater than 10.')
-  }
-})
-
-hook.on('test', async () => {
-  console.log('This message is not showing up in the console.')
-})
-
-const err = await hook.trigger('test', 11)
-if (err) {
-  throw err
-}
 ```
 
 ### Data hooking using a life cycle
 
-Use `Before:` and `After:` The prefixes to manage the life cycle easily. It is easier to use with stop event propagation.
+You can hook into the process using the `onBefore` and `onAfter` methods.
 
 ```typescript
 const hook = useHookall(someObject)
 
-hook.on('before:create', async (data) => {
+hook.onBefore('create', async (data) => {
   if (!data) {
-    return new Error('There is no initialization data.')
+    throw new Error('There is no initialization data.')
   }
+  return data
 })
 
-hook.on('create', async (data) => {
+hook.onAfter('create', async (data) => {
   // ...
 })
 
-hook.on('after:create', async (data) => {
-  console.log('Successfully all work has been completed.')
-})
-
-const err = await hook.trigger('create', initialData)
-if (err) {
-  throw err
-}
+const initialData = await getFromRemote() // get a null
+const err = await hook.trigger('create', initialData, async (initialData) => {
+  await doJob(initialData)
+  return initialData
+}) // Error! There is no initialization data.
 ```
 
 ## How to use
@@ -183,7 +154,7 @@ import { useHookall } from 'hookall'
 const element = document.querySelector('your-selector')
 const hook = useHookall(element)
 
-hook.on('create', async () => { ... })
+hook.onBefore('create', async () => { ... })
 ```
 
 If not specified, will be work for global. This is useful when you want to share your work with multiple files.
@@ -193,51 +164,57 @@ import { useHookall } from 'hookall'
 
 // file A.ts
 const globalHook = useHookall()
-
-globalHook.on('from-B', async (now) => { ... })
+globalHook.onBefore('from-B', async (now) => { ... })
 
 // file B.ts
 const globalHook = useHookall()
-
-await globalHook.trigger('from-B', Date.now())
+await globalHook.trigger('from-B', Date.now(), () => {
+  // ...
+})
 ```
 
-### `on` (command: `string`, callback: `Function`): `this`
+### `onBefore` (command: `string`, callback: `Function`): `this`
 
-Register the callback function. Registered functions can then be called past the same command with the `trigger` method. The parameters of the callback function are those passed when calling the `trigger` method. If callback function returns `non-undefined`, subsequent callback functions are no longer called.
+You register a preprocessing function, which is called before the callback function of the `trigger` method.
 
-You can manage the life cycle using `before:`, `after:`. If the command is `a`, you can use `before:a` or `after:a`. The life cycle is called in the order of `before:a` → `a` → `after:a`, and if the `non-undefined` value is returned in life cycle, the next life cycle is not called.
+The value returned by this function is passed as a parameter to the `trigger` method's callback function. If you register multiple preprocessing functions, they are executed in order, with each function receiving the value returned by the previous one as a parameter.
 
-### `once` (command: `string`, callback: `Function`): `this`
+### `onceBefore` (command: `string`, callback: `Function`): `this`
 
-Similar to the `on` method, but once called, it is no longer called. The parameters of the callback function are those passed when calling the `trigger` method. If callback function returns `non-undefined`, subsequent callback functions are no longer called. If the current callback is not called by returning a `non-undefined` value from the previous callback, this callback is not deleted.
+Similar to the `onBefore` method, but it only runs once.
+For more details, please refer to the `onBefore` method.
 
-You can manage the life cycle using `before:`, `after:`. If the command is `a`, you can use `before:a` or `after:a`. The life cycle is called in the order of `before:a` → `a` → `after:a`, and if the `non-undefined` value is returned in life cycle, the next life cycle is not called.
+### `onAfter` (command: `string`, callback: `Function`): `this`
 
-### `off` (command: `string`, callback?: `Function`): `this`
+You register a post-processing function which is called after the callback function of the `trigger` method finishes.
 
-Remove the callback function registered with the on method. If the callback function parameter is not exceeded, remove all callback functions registered with that command.
+This function receives the value returned by the `trigger` method's callback function as a parameter. If you register multiple post-processing functions, they are executed in order, with each function receiving the value returned by the previous one as a parameter.
 
-You can manage the life cycle using `before:`, `after:`. If the command is `a`, you can use `before:a` or `after:a`. The life cycle is called in the order of `before:a` → `a` → `after:a`, and if the `non-undefined` value is returned in life cycle, the next life cycle is not called.
+### `onceAfter` (command: `string`, callback: `Function`): `this`
 
-### `trigger` (command: `string`, ...args: `any`): `Promise<any>`
+Similar to the `onAfter` method, but it only runs once.
+For more details, please refer to the `onAfter` method.
 
-Invokes all callback functions registered with the on method. The callback function is called in the registered order and can operate asynchronously. Therefore, the `await` keyword allows you to wait until all registered callback functions are called. If the callback function registered with the `on` method returns a `non-undefined` value, it stops subsequent callback function calls and returns that value.
+### `offBefore` (command: `string`, callback?: `Function`): `this`
 
-```typescript
-const actor = someGameObject
+You remove the preprocessing functions registered with `onBefore` or `onceBefore` methods.  
+If you don't specify a callback parameter, it removes all preprocessing functions registered for that command.
 
-class Chair {
-  constructor() {
-    const hook = useHookall(actor)
-    hook.on('character-sit', () => {
-      if (actor.nearBy(this)) {
-        return { ok: true, target: this }
-      }
-    })
-  }
-}
-```
+### `offAfter` (command: `string`, callback?: `Function`): `this`
+
+You remove the post-preprocessing functions registered with `onAfter` or `onceAfter` methods.  
+If you don't specify a callback parameter, it removes all post-preprocessing functions registered for that command.
+
+### `trigger` (command: `string`, arg: `any`): `Promise<any>`
+
+You execute the callback function provided as a parameter. This callback function receives the `initialValue` parameter.
+
+If preprocessing functions are registered, they run first, and the value returned by the preprocessing functions becomes the `initialValue` parameter.
+
+After the callback function finishes, post-processing functions are called.
+These post-processing functions receive the value returned by the callback function as a parameter and run sequentially.
+
+The final value returned becomes the result of the `trigger` method.
 
 ## License
 

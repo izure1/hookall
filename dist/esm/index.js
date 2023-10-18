@@ -7,24 +7,30 @@ var __publicField = (obj, key, value) => {
 
 // src/Hookall.ts
 var HookallStore = class extends WeakMap {
-  ensure(key) {
-    if (!this.has(key)) {
-      const command = /* @__PURE__ */ new Map();
-      this.set(key, command);
+  ensure(obj, key) {
+    if (!this.has(obj)) {
+      const scope2 = {};
+      this.set(obj, scope2);
     }
-    return this.get(key);
+    const scope = this.get(obj);
+    if (!Object.prototype.hasOwnProperty.call(scope, key)) {
+      scope[key] = /* @__PURE__ */ new Map();
+    }
+    return scope[key];
   }
 };
 var _Hookall = class {
-  __hookCommands;
+  beforeHooks;
+  afterHooks;
   constructor(target) {
-    this.__hookCommands = _Hookall.__Store.ensure(target);
+    this.beforeHooks = _Hookall._Store.ensure(target, "before");
+    this.afterHooks = _Hookall._Store.ensure(target, "after");
   }
-  _ensureCommand(command) {
-    if (!this.__hookCommands.has(command)) {
-      this.__hookCommands.set(command, []);
+  _ensureCommand(hooks, command) {
+    if (!hooks.has(command)) {
+      hooks.set(command, []);
     }
-    return this.__hookCommands.get(command);
+    return hooks.get(command);
   }
   _createWrapper(command, callback, repeat) {
     return {
@@ -33,20 +39,29 @@ var _Hookall = class {
       repeat
     };
   }
-  on(command, callback) {
-    const wrappers = this._ensureCommand(command);
-    const wrapper = this._createWrapper(command, callback, -1);
-    wrappers.push(wrapper);
+  _on(hooks, command, callback, repeat) {
+    const wrappers = this._ensureCommand(hooks, command);
+    const wrapper = this._createWrapper(command, callback, repeat);
+    wrappers.unshift(wrapper);
+  }
+  onBefore(command, callback) {
+    this._on(this.beforeHooks, command, callback, -1);
     return this;
   }
-  once(command, callback) {
-    const wrappers = this._ensureCommand(command);
-    const wrapper = this._createWrapper(command, callback, 1);
-    wrappers.push(wrapper);
+  onceBefore(command, callback) {
+    this._on(this.beforeHooks, command, callback, 1);
     return this;
   }
-  off(command, callback) {
-    const wrappers = this._ensureCommand(command);
+  onAfter(command, callback) {
+    this._on(this.afterHooks, command, callback, -1);
+    return this;
+  }
+  onceAfter(command, callback) {
+    this._on(this.afterHooks, command, callback, 1);
+    return this;
+  }
+  _off(hooks, command, callback) {
+    const wrappers = this._ensureCommand(hooks, command);
     if (callback) {
       const i = wrappers.findIndex((wrapper) => wrapper.callback === callback);
       if (i !== -1) {
@@ -57,29 +72,38 @@ var _Hookall = class {
     }
     return this;
   }
-  async trigger(command, ...args) {
-    let r;
-    const wrappers = [
-      ...this._ensureCommand(`before:${command}`),
-      ...this._ensureCommand(`${command}`),
-      ...this._ensureCommand(`after:${command}`)
-    ];
-    for (const wrapper of wrappers) {
-      r = await wrapper.callback(...args);
+  offBefore(command, callback) {
+    this._off(this.beforeHooks, command, callback);
+    return this;
+  }
+  offAfter(command, callback) {
+    this._off(this.afterHooks, command, callback);
+    return this;
+  }
+  async _hookWith(hooks, command, value) {
+    let wrappers = this._ensureCommand(hooks, command);
+    let i = wrappers.length;
+    while (i--) {
+      const wrapper = wrappers[i];
+      value = await wrapper.callback(value);
       wrapper.repeat -= 1;
       if (wrapper.repeat === 0) {
-        this.off(`${command}`, wrapper.callback);
-      }
-      if (r !== void 0) {
-        break;
+        this._off(hooks, command, wrapper.callback);
       }
     }
-    return r;
+    return value;
+  }
+  async trigger(command, initialValue, callback) {
+    let value;
+    value = await this._hookWith(this.beforeHooks, command, initialValue);
+    value = await callback(value);
+    value = await this._hookWith(this.afterHooks, command, value);
+    return value;
   }
 };
 var Hookall = _Hookall;
 __publicField(Hookall, "Global", {});
-__publicField(Hookall, "__Store", new HookallStore());
+__publicField(Hookall, "_Store", new HookallStore());
 function useHookall(target = Hookall.Global) {
   return new Hookall(target);
 }
