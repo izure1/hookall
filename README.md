@@ -1,6 +1,7 @@
 # Hookall
 
 [![](https://data.jsdelivr.com/v1/package/npm/hookall/badge)](https://www.jsdelivr.com/package/npm/hookall)
+![Node.js workflow](https://github.com/izure1/hookall/actions/workflows/node.js.yml/badge.svg)
 
 Enhance your program's strength and flexibility by seamlessly hooking into the operation.
 
