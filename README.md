@@ -62,6 +62,9 @@ class FileBuilder {
   }
 }
 
+type Hook = {
+  make: (filePath: string) => string
+}
 
 const builder = new FileBuilder()
 const backupHook = useHookall<Hook>(builder)
