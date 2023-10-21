@@ -63,7 +63,7 @@ class FileBuilder {
 }
 
 type Hook = {
-  make: (filePath: string) => string
+  make: (filePath: string) => Promise<string>
 }
 
 const builder = new FileBuilder()
