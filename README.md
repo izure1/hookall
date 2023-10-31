@@ -177,6 +177,12 @@ await globalHook.trigger('from-B', Date.now(), () => {
 })
 ```
 
+If you want to use not async, you can use `useHookallSync`.
+
+```typescript
+import { useHookallSync } from 'hookall'
+```
+
 ### `onBefore` (command: `string`, callback: `Function`): `this`
 
 You register a preprocessing function, which is called before the callback function of the `trigger` method.
@@ -209,7 +215,7 @@ If you don't specify a callback parameter, it removes all preprocessing function
 You remove the post-preprocessing functions registered with `onAfter` or `onceAfter` methods.  
 If you don't specify a callback parameter, it removes all post-preprocessing functions registered for that command.
 
-### `trigger` (command: `string`, arg: `any`): `Promise<any>`
+### `trigger` (command: `string`, initialValue: `any`, callback: `Function`): `Promise<any>`
 
 You execute the callback function provided as a parameter. This callback function receives the `initialValue` parameter.
 
