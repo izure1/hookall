@@ -1,17 +1,27 @@
 const esbuild = require('esbuild')
 
-esbuild.buildSync({
-  entryPoints: ['./src/index.js'],
-  outfile: './dist/esm/index.js',
-  bundle: true,
-  format: 'esm',
+const common = {
   target: 'esnext',
+  bundle: true,
+  entryPoints: [
+    { in: 'src/index.ts', out: 'index' }
+  ],
+}
+
+esbuild.build({
+  ...common,
+  format: 'esm',
+  outdir: 'dist/esm',
+  outExtension: {
+    '.js': '.mjs'
+  },
 })
 
-esbuild.buildSync({
-  entryPoints: ['./src/index.js'],
-  outfile: './dist/cjs/index.js',
-  bundle: true,
+esbuild.build({
+  ...common,
   format: 'cjs',
-  target: 'esnext',
+  outdir: 'dist/cjs',
+  outExtension: {
+    '.js': '.cjs'
+  },
 })
