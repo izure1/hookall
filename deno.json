@@ -1,0 +1,21 @@
+{
+  "name": "@izure/hookall",
+  "version": "0.0.1",
+  "description": "Enhance your program's strength and flexibility by seamlessly hooking into the operation.",
+  "author": "izure1 <admin@izure.org>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/izure1/hookall.git"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publish": {
+    "include": [
+      "LICENSE",
+      "README.md",
+      "src/**/*.ts"
+    ]
+  }
+}
