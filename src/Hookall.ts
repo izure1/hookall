@@ -54,7 +54,7 @@ export interface IHookall<M extends ListenerSignature<M> = DefaultListener> {
   onceAfter<K extends keyof M>(command: HookallLifeCycle<K&string>, callback: HookallOnCallback<M, K>): this
   offBefore<K extends keyof M>(command: HookallLifeCycle<K&string>, callback?: HookallOnCallback<M, K>): this
   offAfter<K extends keyof M>(command: HookallLifeCycle<K&string>, callback?: HookallOnCallback<M, K>): this
-  trigger<K extends keyof M>(command: K&string, initialValue: Awaited<ReturnType<M[K]>>, callback: HookallTriggerCallback<M, K>): Promise<ReturnType<M[K]>>
+  trigger<K extends keyof M>(command: K&string, initialValue: Awaited<ReturnType<M[K]>>, callback: HookallTriggerCallback<M, K>): Promise<Awaited<ReturnType<M[K]>>>
 }
 
 class Hookall<M extends ListenerSignature<M>> implements IHookall<M> {

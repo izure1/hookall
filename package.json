@@ -1,6 +1,6 @@
 {
   "name": "hookall",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Enhance your program's strength and flexibility by seamlessly hooking into the operation.",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.mjs",
