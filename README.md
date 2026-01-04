@@ -47,37 +47,42 @@ class FileBuilder {
     this._name = ''
   }
 
-  setName(name: string): void {
+  setName(name: string): this {
     this._name = name
     return this
   }
 
-  async make(): Promise<string> {
-    const filePath = this._dir+this._name
+  async make(encoding: string): Promise<string> {
+    const filePath = './' + this._name
     const hook = useHookall<Hook>(this)
 
-    return await hook.trigger('make', filePath, async (filePath) => {
-      return await writeFile(filePath)
-    })
+    // The second parameter 'filePath' is the initialValue.
+    // The following parameters are 'params'.
+    return await hook.trigger('make', filePath, async (filePath, encoding) => {
+      await writeFile(filePath, 'some content', { encoding })
+      return filePath
+    }, encoding)
   }
 }
 
 type Hook = {
-  make: (filePath: string) => Promise<string>
+  make: (filePath: string, encoding: string) => Promise<string>
 }
 
 const builder = new FileBuilder()
-const backupHook = useHookall<Hook>(builder)
+const hook = useHookall<Hook>(builder)
 
-hook.onBefore('make', async (filePath) => {
+hook.onBefore('make', async (filePath, encoding) => {
+  console.log(`Creating file with encoding: ${encoding}`)
   return filePath.replace('.txt', '.json')
 })
+
 hook.onAfter('make', async (filePath) => {
   console.log('file created!')
   return filePath
 })
 
-const filePath = await builder.setName('my-file.txt').make()
+const filePath = await builder.setName('my-file.txt').make('utf-8')
 console.log(filePath) // my-file.json
 ```
 
@@ -187,7 +192,9 @@ import { useHookallSync } from 'hookall'
 
 You register a preprocessing function, which is called before the callback function of the `trigger` method.
 
-The value returned by this function is passed as a parameter to the `trigger` method's callback function. If you register multiple preprocessing functions, they are executed in order, with each function receiving the value returned by the previous one as a parameter.
+The value returned by this function is passed as a parameter to the `trigger` method's callback function. The callback receives `initialValue` as its first argument and any additional `params` passed to `trigger` as subsequent arguments.
+
+If you register multiple preprocessing functions, they are executed in order, with each function receiving the value returned by the previous one as a parameter.
 
 ### `onceBefore` (command: `string`, callback: `Function`): `this`
 
@@ -198,7 +205,9 @@ For more details, please refer to the `onBefore` method.
 
 You register a post-processing function which is called after the callback function of the `trigger` method finishes.
 
-This function receives the value returned by the `trigger` method's callback function as a parameter. If you register multiple post-processing functions, they are executed in order, with each function receiving the value returned by the previous one as a parameter.
+This function receives the value returned by the `trigger` method's callback function as a parameter. Similar to `onBefore`, it also receives any additional `params` passed to `trigger`.
+
+If you register multiple post-processing functions, they are executed in order, with each function receiving the value returned by the previous one as a parameter.
 
 ### `onceAfter` (command: `string`, callback: `Function`): `this`
 
@@ -215,16 +224,34 @@ If you don't specify a callback parameter, it removes all preprocessing function
 You remove the post-preprocessing functions registered with `onAfter` or `onceAfter` methods.  
 If you don't specify a callback parameter, it removes all post-preprocessing functions registered for that command.
 
-### `trigger` (command: `string`, initialValue: `any`, callback: `Function`): `Promise<any>`
+### `trigger` (command: `string`, initialValue: `any`, callback: `Function`, ...params: `any[]`): `Promise<any>`
 
-You execute the callback function provided as a parameter. This callback function receives the `initialValue` parameter.
+You execute the callback function provided as a parameter. This callback function receives the `initialValue` parameter and optional `params`.
 
-If preprocessing functions are registered, they run first, and the value returned by the preprocessing functions becomes the `initialValue` parameter.
+If preprocessing functions are registered, they run first, and the value returned by the preprocessing functions becomes the `initialValue` parameter. All hooks (`onBefore`, `onAfter`) and the `trigger` callback itself can receive `params` as subsequent arguments.
 
 After the callback function finishes, post-processing functions are called.
 These post-processing functions receive the value returned by the callback function as a parameter and run sequentially.
 
 The final value returned becomes the result of the `trigger` method.
+
+### Using `params` with `trigger`
+
+You can pass additional parameters to the `trigger` method, which will be accessible in all related hooks.
+
+```typescript
+const hook = useHookall(obj)
+
+hook.onBefore('save', async (content, filename, encoding) => {
+  console.log(`Saving ${filename} with encoding ${encoding}`)
+  return content.trim()
+})
+
+const result = await hook.trigger('save', '  Hello World  ', async (content, filename, encoding) => {
+  // perform save operation
+  return true
+}, 'example.txt', 'utf-8')
+```
 
 ## License
 

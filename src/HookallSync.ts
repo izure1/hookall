@@ -1,3 +1,7 @@
+type HookallCallbackParams<
+  T extends (...args: any) => any
+> = T extends (initialValue: any, ...params: infer R) => any ? R : never
+
 type HookallLifeCycle<K extends string> = K
 
 type DefaultListener = {
@@ -11,19 +15,19 @@ type ListenerSignature<M> = {
 type HookallOnCallback<
   M extends ListenerSignature<M>,
   K extends keyof M
-> = (value: ReturnType<M[K]>) => ReturnType<M[K]>
+> = (initialValue: ReturnType<M[K]>, ...params: HookallCallbackParams<M[K]>) => ReturnType<M[K]>
 
 type HookallTriggerCallback<
   M extends ListenerSignature<M>,
   K extends keyof M
-> = (value: Parameters<M[K]>[0]) => ReturnType<M[K]>
+> = (initialValue: Parameters<M[K]>[0], ...params: HookallCallbackParams<M[K]>) => ReturnType<M[K]>
 
 type HookallCallbackWrapper<
   M extends ListenerSignature<M>,
   K extends keyof M
 > = {
   callback: HookallOnCallback<M, K>
-  command: HookallLifeCycle<(keyof M)&string>
+  command: HookallLifeCycle<(keyof M) & string>
   repeat: number
 }
 
@@ -42,19 +46,19 @@ class HookallStore<M extends ListenerSignature<M>, K extends keyof M> extends We
     const scope = this.get(obj)!
     if (!Object.prototype.hasOwnProperty.call(scope, key)) {
       scope[key] = new Map()
-    } 
+    }
     return scope[key]
   }
 }
 
 export interface IHookallSync<M extends ListenerSignature<M> = DefaultListener> {
-  onBefore<K extends keyof M>(command: HookallLifeCycle<K&string>, callback: HookallOnCallback<M, K>): this
-  onAfter<K extends keyof M>(command: HookallLifeCycle<K&string>, callback: HookallOnCallback<M, K>): this
-  onceBefore<K extends keyof M>(command: HookallLifeCycle<K&string>, callback: HookallOnCallback<M, K>): this
-  onceAfter<K extends keyof M>(command: HookallLifeCycle<K&string>, callback: HookallOnCallback<M, K>): this
-  offBefore<K extends keyof M>(command: HookallLifeCycle<K&string>, callback?: HookallOnCallback<M, K>): this
-  offAfter<K extends keyof M>(command: HookallLifeCycle<K&string>, callback?: HookallOnCallback<M, K>): this
-  trigger<K extends keyof M>(command: K&string, initialValue: ReturnType<M[K]>, callback: HookallTriggerCallback<M, K>): ReturnType<M[K]>
+  onBefore<K extends keyof M>(command: HookallLifeCycle<K & string>, callback: HookallOnCallback<M, K>): this
+  onAfter<K extends keyof M>(command: HookallLifeCycle<K & string>, callback: HookallOnCallback<M, K>): this
+  onceBefore<K extends keyof M>(command: HookallLifeCycle<K & string>, callback: HookallOnCallback<M, K>): this
+  onceAfter<K extends keyof M>(command: HookallLifeCycle<K & string>, callback: HookallOnCallback<M, K>): this
+  offBefore<K extends keyof M>(command: HookallLifeCycle<K & string>, callback?: HookallOnCallback<M, K>): this
+  offAfter<K extends keyof M>(command: HookallLifeCycle<K & string>, callback?: HookallOnCallback<M, K>): this
+  trigger<K extends keyof M>(command: K & string, initialValue: ReturnType<M[K]>, callback: HookallTriggerCallback<M, K>, ...params: HookallCallbackParams<M[K]>): ReturnType<M[K]>
 }
 
 class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
@@ -77,7 +81,7 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
 
   private _ensureCommand<K extends keyof M>(
     hooks: HookallCallbackMap<M, K>,
-    command: HookallLifeCycle<K&string>
+    command: HookallLifeCycle<K & string>
   ): HookallCallbackWrapper<M, K>[] {
     if (!hooks.has(command)) {
       hooks.set(command, [])
@@ -86,7 +90,7 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
   }
 
   private _createWrapper<K extends keyof M>(
-    command: HookallLifeCycle<K&string>,
+    command: HookallLifeCycle<K & string>,
     callback: HookallOnCallback<M, K>,
     repeat: number
   ): HookallCallbackWrapper<M, K> {
@@ -99,7 +103,7 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
 
   private _on<K extends keyof M>(
     hooks: HookallCallbackMap<M, K>,
-    command: K&string,
+    command: K & string,
     callback: HookallOnCallback<M, K>,
     repeat: number
   ): void {
@@ -116,7 +120,7 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
    * @param callback Preprocessing function to register.
    */
   onBefore<K extends keyof M>(
-    command: HookallLifeCycle<K&string>,
+    command: HookallLifeCycle<K & string>,
     callback: HookallOnCallback<M, K>
   ): this {
     this._on(this.beforeHooks, command, callback, -1)
@@ -130,13 +134,13 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
    * @param callback Preprocessing function to register.
    */
   onceBefore<K extends keyof M>(
-    command: HookallLifeCycle<K&string>,
+    command: HookallLifeCycle<K & string>,
     callback: HookallOnCallback<M, K>
   ): this {
     this._on(this.beforeHooks, command, callback, 1)
     return this
   }
-  
+
   /**
    * You register a post-processing function which is called after the callback function of the `trigger` method finishes.
    * This function receives the value returned by the `trigger` method's callback function as a parameter.
@@ -145,7 +149,7 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
    * @param callback Post-preprocessing function to register.
    */
   onAfter<K extends keyof M>(
-    command: HookallLifeCycle<K&string>,
+    command: HookallLifeCycle<K & string>,
     callback: HookallOnCallback<M, K>
   ): this {
     this._on(this.afterHooks, command, callback, -1)
@@ -159,7 +163,7 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
    * @param callback Post-preprocessing function to register.
    */
   onceAfter<K extends keyof M>(
-    command: HookallLifeCycle<K&string>,
+    command: HookallLifeCycle<K & string>,
     callback: HookallOnCallback<M, K>
   ): this {
     this._on(this.afterHooks, command, callback, 1)
@@ -168,7 +172,7 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
 
   private _off<K extends keyof M>(
     hooks: HookallCallbackMap<M, K>,
-    command: HookallLifeCycle<K&string>,
+    command: HookallLifeCycle<K & string>,
     callback?: HookallOnCallback<M, K>
   ): this {
     const wrappers = this._ensureCommand(hooks, command)
@@ -191,7 +195,7 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
    * @param callback Preprocessing function to be deleted.
    */
   offBefore<K extends keyof M>(
-    command: HookallLifeCycle<K&string>,
+    command: HookallLifeCycle<K & string>,
     callback?: HookallOnCallback<M, K>
   ): this {
     this._off(this.beforeHooks, command, callback)
@@ -205,7 +209,7 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
    * @param callback post-Preprocessing function to be deleted.
    */
   offAfter<K extends keyof M>(
-    command: HookallLifeCycle<K&string>,
+    command: HookallLifeCycle<K & string>,
     callback?: HookallOnCallback<M, K>
   ): this {
     this._off(this.afterHooks, command, callback)
@@ -214,14 +218,15 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
 
   private _hookWith<K extends keyof M>(
     hooks: HookallCallbackMap<M, K>,
-    command: HookallLifeCycle<K&string>,
-    value: ReturnType<M[K]>
+    command: HookallLifeCycle<K & string>,
+    value: ReturnType<M[K]>,
+    ...params: HookallCallbackParams<M[K]>
   ): ReturnType<M[K]> {
     let wrappers = this._ensureCommand(hooks, command)
     let i = wrappers.length
     while (i--) {
       const wrapper = wrappers[i]
-      value = wrapper.callback(value)
+      value = wrapper.callback(value, ...params)
       wrapper.repeat -= 1
       if (wrapper.repeat === 0) {
         this._off(hooks, command, wrapper.callback)
@@ -243,14 +248,15 @@ class HookallSync<M extends ListenerSignature<M>> implements IHookallSync<M> {
    * @param callback The callback function to be executed.
    */
   trigger<K extends keyof M>(
-    command: HookallLifeCycle<K&string>,
+    command: HookallLifeCycle<K & string>,
     initialValue: ReturnType<M[K]>,
-    callback: HookallTriggerCallback<M, K>
+    callback: HookallTriggerCallback<M, K>,
+    ...params: HookallCallbackParams<M[K]>
   ): ReturnType<M[K]> {
     let value: any
-    value = this._hookWith(this.beforeHooks, command, initialValue)
-    value = callback(value)
-    value = this._hookWith(this.afterHooks, command, value)
+    value = this._hookWith(this.beforeHooks, command, initialValue, ...params)
+    value = callback(value, ...params)
+    value = this._hookWith(this.afterHooks, command, value, ...params)
     return value
   }
 }
