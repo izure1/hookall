@@ -249,8 +249,8 @@ hook.onBefore('save', async (content, filename, encoding) => {
 
 const result = await hook.trigger('save', '  Hello World  ', async (content, filename, encoding) => {
   // perform save operation
-  return true
-}, 'example.txt', 'utf-8')
+  return content
+}, 'example.txt', 'utf-8') // 'Hello World'
 ```
 
 ## License
