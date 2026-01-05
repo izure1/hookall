@@ -1,258 +1,164 @@
 # Hookall
 
-[![](https://data.jsdelivr.com/v1/package/npm/hookall/badge)](https://www.jsdelivr.com/package/npm/hookall)
-![Node.js workflow](https://github.com/izure1/hookall/actions/workflows/node.js.yml/badge.svg)
+[![JSDeliver](https://data.jsdelivr.com/v1/package/npm/hookall/badge)](https://www.jsdelivr.com/package/npm/hookall)
+[![Node.js CI](https://github.com/izure1/hookall/actions/workflows/node.js.yml/badge.svg)](https://github.com/izure1/hookall/actions/workflows/node.js.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Enhance your program's strength and flexibility by seamlessly hooking into the operation.
+**Hookall** is a lightweight, flexible, and type-safe hooking system for Node.js and the browser. Enhance your application's extensibility by seamlessly injecting logic into any operation.
+
+---
+
+## 🚀 Quick Start
 
 ```typescript
 import { useHookall } from 'hookall'
 
 const hook = useHookall(yourObject)
 
-hook.onBefore('run', async (arr) => {
-  arr.push(2)
-  return arr
+// 1. Register hooks
+hook.onBefore('run', async (val) => {
+  return [...val, 2]
 })
 
-hook.onAfter('run', async (arr) => {
-  arr.push(4)
-  return arr
+hook.onAfter('run', async (val) => {
+  return [...val, 4]
 })
 
-const initial = [1]
-const arr = await hook.trigger('run', initial, (arr) => {
-  arr.push(3)
-  return arr
-}) // console: [1, 2, 3, 4]
+// 2. Trigger operation
+const result = await hook.trigger('run', [1], async (val) => {
+  return [...val, 3]
+})
+
+console.log(result) // [1, 2, 3, 4]
 ```
 
-**Attention!**  
-`Ver.2` has many differences compared to `Ver.1`, especially in the preprocessing and post-processing steps. Please refer to the documentation.
+## 📋 Table of Contents
 
-## Why use Hookall?
+- [Why Hookall?](#-why-hookall)
+- [Installation](#-installation)
+- [Methods](#-methods)
+- [Usage Examples](#-usage-examples)
+- [License](#-license)
 
-### Strict type definition with typescript
+---
 
-If you want to support strict type definitions with typescript, you can use the following syntax.
+## ✨ Why Hookall?
 
-```typescript
-import { writeFile } from 'fs/promises'
-import { useHookall, IHookall } from 'hookall'
+### 🛡️ Strict Type Safety
+Full TypeScript support for commands, parameters, and return types. Gain full IDE autocompletion and compile-time checks.
 
-class FileBuilder {
-  private _name: string
+### 🔄 Asynchronous Support
+Native support for `async/await`. Hooks are executed sequentially, ensuring data integrity across asynchronous operations.
 
-  constructor() {
-    this._name = ''
-  }
+### 🧬 Lifecycle Management
+Easily manage complex workflows using predefined `onBefore` and `onAfter` lifecycles. Perfect for middleware, plugins, or validation logic.
 
-  setName(name: string): this {
-    this._name = name
-    return this
-  }
+### 🌍 Global & Local Scopes
+Use hooks locally for specific objects or globally to share logic across different modules and files.
 
-  async make(encoding: string): Promise<string> {
-    const filePath = './' + this._name
-    const hook = useHookall<Hook>(this)
+---
 
-    // The second parameter 'filePath' is the initialValue.
-    // The following parameters are 'params'.
-    return await hook.trigger('make', filePath, async (filePath, encoding) => {
-      await writeFile(filePath, 'some content', { encoding })
-      return filePath
-    }, encoding)
-  }
-}
+## 📦 Installation
 
-type Hook = {
-  make: (filePath: string, encoding: string) => Promise<string>
-}
-
-const builder = new FileBuilder()
-const hook = useHookall<Hook>(builder)
-
-hook.onBefore('make', async (filePath, encoding) => {
-  console.log(`Creating file with encoding: ${encoding}`)
-  return filePath.replace('.txt', '.json')
-})
-
-hook.onAfter('make', async (filePath) => {
-  console.log('file created!')
-  return filePath
-})
-
-const filePath = await builder.setName('my-file.txt').make('utf-8')
-console.log(filePath) // my-file.json
-```
-
-### Work asynchronously
-
-`hookall` library supports asynchronous.
-
-```typescript
-hook.on('create', async (el) => {
-  await doSomething(el)
-  return el
-})
-
-hook.on('create', async (el) => {
-  await doSomethingAnother(el)
-  return el
-})
-
-console.log('create!')
-await hook.trigger('create', element)
-console.log('done!')
-```
-
-### Data hooking using a life cycle
-
-You can hook into the process using the `onBefore` and `onAfter` methods.
-
-```typescript
-const hook = useHookall(someObject)
-
-hook.onBefore('create', async (data) => {
-  if (!data) {
-    throw new Error('There is no initialization data.')
-  }
-  return data
-})
-
-hook.onAfter('create', async (data) => {
-  // ...
-})
-
-const initialData = await getFromRemote() // get a null
-const err = await hook.trigger('create', initialData, async (initialData) => {
-  await doJob(initialData)
-  return initialData
-}) // Error! There is no initialization data.
-```
-
-## How to use
-
-### Node.js (cjs)
+### Node.js (Standard)
 
 ```bash
-npm i hookall
+npm install hookall
 ```
 
 ```typescript
-import { useHookall } from 'hookall'
+import { useHookall, useHookallSync } from 'hookall'
 ```
 
-### Browser (esm)
+### Browser (ESM)
 
 ```html
 <script type="module">
-  import { useHookall } from 'https://cdn.jsdelivr.net/npm/hookall@2.x.x/dist/esm/index.min.js'
+  import { useHookall } from 'https://cdn.jsdelivr.net/npm/hookall@2/+esm'
 </script>
 ```
 
-## Methods
+---
 
-### `useHookall` (target: `object`|`undefined`)
+## 🛠️ Methods
 
-Create hook system. you can pass a target `object` or `undefined`. If you pass a `object`, the hook system will be work for object locally. You're going to want this kind of usage in general.
+### `useHookall(target?: object)`
+Creates an asynchronous hook system.
+- **target**: Optional. If provided, the hook system is scoped to this object. If omitted, it operates in a **global scope**.
+
+### `useHookallSync(target?: object)`
+Creates a synchronous hook system. Use this if your operations do not require `async/await`.
+
+### `onBefore(command, callback)` / `onceBefore(command, callback)`
+Registers a preprocessing function called **before** the main `trigger` callback.
+- The return value of one hook is passed as the `initialValue` to the next.
+- `onceBefore` runs only once and is then automatically removed.
+
+### `onAfter(command, callback)` / `onceAfter(command, callback)`
+Registers a post-processing function called **after** the main `trigger` callback finishes.
+- Receives the result of the `trigger` callback (or previous `onAfter` hook) as its first argument.
+- `onceAfter` runs only once.
+
+### `offBefore(command, callback?)` / `offAfter(command, callback?)`
+Removes registered hooks.
+- If `callback` is omitted, all hooks for the specified `command` are removed.
+
+### `trigger(command, initialValue, callback, ...params)`
+Executes the hook lifecycle:
+1. All `onBefore` hooks (sequentially).
+2. The main `callback`.
+3. All `onAfter` hooks (sequentially).
+
+Returns the final processed value.
+
+---
+
+## 💡 Usage Examples
+
+### Strict Type Definitions
+
+Define a hook interface to get the most out of TypeScript:
 
 ```typescript
 import { useHookall } from 'hookall'
 
-const element = document.querySelector('your-selector')
-const hook = useHookall(element)
+interface MyHooks {
+  save: (content: string, filename: string) => Promise<string>
+}
 
-hook.onBefore('create', async () => { ... })
-```
+const obj = { name: 'MyProcessor' }
+const hook = useHookall<MyHooks>(obj)
 
-If not specified, will be work for global. This is useful when you want to share your work with multiple files.
-
-```typescript
-import { useHookall } from 'hookall'
-
-// file A.ts
-const globalHook = useHookall()
-globalHook.onBefore('from-B', async (now) => { ... })
-
-// file B.ts
-const globalHook = useHookall()
-await globalHook.trigger('from-B', Date.now(), () => {
-  // ...
-})
-```
-
-If you want to use not async, you can use `useHookallSync`.
-
-```typescript
-import { useHookallSync } from 'hookall'
-```
-
-### `onBefore` (command: `string`, callback: `Function`): `this`
-
-You register a preprocessing function, which is called before the callback function of the `trigger` method.
-
-The value returned by this function is passed as a parameter to the `trigger` method's callback function. The callback receives `initialValue` as its first argument and any additional `params` passed to `trigger` as subsequent arguments.
-
-If you register multiple preprocessing functions, they are executed in order, with each function receiving the value returned by the previous one as a parameter.
-
-### `onceBefore` (command: `string`, callback: `Function`): `this`
-
-Similar to the `onBefore` method, but it only runs once.
-For more details, please refer to the `onBefore` method.
-
-### `onAfter` (command: `string`, callback: `Function`): `this`
-
-You register a post-processing function which is called after the callback function of the `trigger` method finishes.
-
-This function receives the value returned by the `trigger` method's callback function as a parameter. Similar to `onBefore`, it also receives any additional `params` passed to `trigger`.
-
-If you register multiple post-processing functions, they are executed in order, with each function receiving the value returned by the previous one as a parameter.
-
-### `onceAfter` (command: `string`, callback: `Function`): `this`
-
-Similar to the `onAfter` method, but it only runs once.
-For more details, please refer to the `onAfter` method.
-
-### `offBefore` (command: `string`, callback?: `Function`): `this`
-
-You remove the preprocessing functions registered with `onBefore` or `onceBefore` methods.  
-If you don't specify a callback parameter, it removes all preprocessing functions registered for that command.
-
-### `offAfter` (command: `string`, callback?: `Function`): `this`
-
-You remove the post-preprocessing functions registered with `onAfter` or `onceAfter` methods.  
-If you don't specify a callback parameter, it removes all post-preprocessing functions registered for that command.
-
-### `trigger` (command: `string`, initialValue: `any`, callback: `Function`, ...params: `any[]`): `Promise<any>`
-
-You execute the callback function provided as a parameter. This callback function receives the `initialValue` parameter and optional `params`.
-
-If preprocessing functions are registered, they run first, and the value returned by the preprocessing functions becomes the `initialValue` parameter. All hooks (`onBefore`, `onAfter`) and the `trigger` callback itself can receive `params` as subsequent arguments.
-
-After the callback function finishes, post-processing functions are called.
-These post-processing functions receive the value returned by the callback function as a parameter and run sequentially.
-
-The final value returned becomes the result of the `trigger` method.
-
-### Using `params` with `trigger`
-
-You can pass additional parameters to the `trigger` method, which will be accessible in all related hooks.
-
-```typescript
-const hook = useHookall(obj)
-
-hook.onBefore('save', async (content, filename, encoding) => {
-  console.log(`Saving ${filename} with encoding ${encoding}`)
+hook.onBefore('save', async (content, filename) => {
+  console.log(`Preparing to save ${filename}...`)
   return content.trim()
 })
 
-const result = await hook.trigger('save', '  Hello World  ', async (content, filename, encoding) => {
-  // perform save operation
+const result = await hook.trigger('save', '  Hello World  ', async (content, filename) => {
+  // Save logic here
   return content
-}, 'example.txt', 'utf-8') // 'Hello World'
+}, 'memo.txt')
+
+console.log(result) // "Hello World"
 ```
 
-## License
+### Passing Additional Parameters
 
-MIT License
+You can pass extra arguments to `trigger` which will be available in all lifecycle hooks:
+
+```typescript
+hook.onBefore('process', async (data, options) => {
+  if (options.verbose) console.log('Processing...')
+  return data
+})
+
+await hook.trigger('process', data, async (data, options) => {
+  return transform(data, options)
+}, { verbose: true })
+```
+
+---
+
+## 📄 License
+
+MIT License. See [LICENSE](LICENSE) for details.
